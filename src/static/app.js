@@ -1,7 +1,5 @@
 document.addEventListener("DOMContentLoaded", () => {
   const activitiesList = document.getElementById("activities-list");
-  const activitySelect = document.getElementById("activity");
-  const signupForm = document.getElementById("signup-form");
   const messageDiv = document.getElementById("message");
   
   // Auth-related elements
@@ -38,6 +36,7 @@ document.addEventListener("DOMContentLoaded", () => {
           details.max_participants - details.participants.length;
 
         // Create participants HTML with delete icons only for authenticated users
+        // Create participants HTML with delete icons
         const participantsHTML =
           details.participants.length > 0
             ? `<div class="participants-section">
@@ -57,6 +56,20 @@ document.addEventListener("DOMContentLoaded", () => {
             </div>`
             : `<p><em>No participants yet</em></p>`;
 
+        // Create the registration form for this activity
+        const registrationHTML = `
+          <div class="activity-registration">
+            <h5>Register for ${name}</h5>
+            <form class="registration-form" data-activity="${name}">
+              <div class="form-group">
+                <label for="email-${name.replace(/\s+/g, '-').toLowerCase()}">Student Email:</label>
+                <input type="email" id="email-${name.replace(/\s+/g, '-').toLowerCase()}" name="email" required placeholder="your-email@mergington.edu" />
+              </div>
+              <button type="submit">Register Student</button>
+            </form>
+          </div>
+        `;
+
         activityCard.innerHTML = `
           <h4>${name}</h4>
           <p>${details.description}</p>
@@ -65,15 +78,10 @@ document.addEventListener("DOMContentLoaded", () => {
           <div class="participants-container">
             ${participantsHTML}
           </div>
+          ${registrationHTML}
         `;
 
         activitiesList.appendChild(activityCard);
-
-        // Add option to select dropdown
-        const option = document.createElement("option");
-        option.value = name;
-        option.textContent = name;
-        activitySelect.appendChild(option);
       });
 
       // Add event listeners to delete buttons (only if authenticated)
@@ -82,6 +90,15 @@ document.addEventListener("DOMContentLoaded", () => {
           button.addEventListener("click", handleUnregister);
         });
       }
+      // Add event listeners to delete buttons
+      document.querySelectorAll(".delete-btn").forEach((button) => {
+        button.addEventListener("click", handleUnregister);
+      });
+
+      // Add event listeners to registration forms
+      document.querySelectorAll(".registration-form").forEach((form) => {
+        form.addEventListener("submit", handleRegistration);
+      });
     } catch (error) {
       activitiesList.innerHTML =
         "<p>Failed to load activities. Please try again later.</p>";
@@ -99,14 +116,22 @@ document.addEventListener("DOMContentLoaded", () => {
     const button = event.target;
     const activity = button.getAttribute("data-activity");
     const email = button.getAttribute("data-email");
+  // Handle registration functionality
+  async function handleRegistration(event) {
+    event.preventDefault();
+    
+    const form = event.target;
+    const activity = form.getAttribute("data-activity");
+    const email = form.querySelector('input[name="email"]').value;
 
     try {
       const response = await fetch(
         `/activities/${encodeURIComponent(
           activity
         )}/unregister?email=${encodeURIComponent(email)}&session_id=${encodeURIComponent(currentSession)}`,
+        )}/signup?email=${encodeURIComponent(email)}`,
         {
-          method: "DELETE",
+          method: "POST",
         }
       );
 
@@ -114,6 +139,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
       if (response.ok) {
         showMessage(result.message, "success");
+        form.reset();
+
         // Refresh activities list to show updated participants
         fetchActivities();
       } else {
@@ -164,6 +191,9 @@ document.addEventListener("DOMContentLoaded", () => {
     } catch (error) {
       isAuthenticated = false;
       console.error("Error checking auth status:", error);
+    } catch (error) {
+      showMessage("Failed to sign up. Please try again.", "error");
+      console.error("Error signing up:", error);
     }
     
     updateUIForAuthState();
@@ -266,14 +296,19 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const email = document.getElementById("email").value;
     const activity = document.getElementById("activity").value;
+  // Handle unregister functionality
+  async function handleUnregister(event) {
+    const button = event.target;
+    const activity = button.getAttribute("data-activity");
+    const email = button.getAttribute("data-email");
 
     try {
       const response = await fetch(
         `/activities/${encodeURIComponent(
           activity
-        )}/signup?email=${encodeURIComponent(email)}`,
+        )}/unregister?email=${encodeURIComponent(email)}`,
         {
-          method: "POST",
+          method: "DELETE",
         }
       );
 
@@ -291,8 +326,22 @@ document.addEventListener("DOMContentLoaded", () => {
     } catch (error) {
       showMessage("Failed to sign up. Please try again.", "error");
       console.error("Error signing up:", error);
+      showMessage("Failed to unregister. Please try again.", "error");
+      console.error("Error unregistering:", error);
     }
-  });
+  }
+
+  // Utility function to show messages
+  function showMessage(text, type) {
+    messageDiv.textContent = text;
+    messageDiv.className = type;
+    messageDiv.classList.remove("hidden");
+
+    // Hide message after 5 seconds
+    setTimeout(() => {
+      messageDiv.classList.add("hidden");
+    }, 5000);
+  }
 
   // Event listeners for authentication
   userIcon.addEventListener('click', () => {
