@@ -377,6 +377,66 @@ section h3 {
   color: #228B22;
 }
 
+/* Filters Toolbar Styles */
+.filters-toolbar {
+  background-color: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 5px;
+  padding: 15px;
+  margin-bottom: 20px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  align-items: center;
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  min-width: 150px;
+  flex: 1;
+}
+
+.filter-group label {
+  font-size: 14px;
+  font-weight: bold;
+  color: #1a237e;
+  margin-bottom: 5px;
+}
+
+.filter-group input,
+.filter-group select {
+  padding: 8px 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+  transition: border-color 0.2s;
+}
+
+.filter-group input:focus,
+.filter-group select:focus {
+  border-color: #1a237e;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(26, 35, 126, 0.1);
+}
+
+/* Mobile responsiveness for filters */
+@media (max-width: 768px) {
+  .filters-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .filter-group {
+    min-width: 100%;
+    margin-bottom: 10px;
+  }
+  
+  .filter-group:last-child {
+    margin-bottom: 0;
+  }
+}
+
 .activity-card {
   margin-bottom: 20px;
   padding: 20px;
