@@ -9,6 +9,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import RedirectResponse
 import os
+import json
 from pathlib import Path
 
 app = FastAPI(title="Mergington High School API",
@@ -19,6 +20,29 @@ current_dir = Path(__file__).parent
 app.mount("/static", StaticFiles(directory=os.path.join(Path(__file__).parent,
           "static")), name="static")
 
+# Function to load activities from JSON file
+def load_activities():
+    """Load activities from the activities.json file"""
+    current_dir = Path(__file__).parent
+    activities_file = current_dir / "activities.json"
+    
+    try:
+        with open(activities_file, 'r', encoding='utf-8') as f:
+            return json.load(f)
+    except FileNotFoundError:
+        raise HTTPException(
+            status_code=500, 
+            detail="Activities configuration file not found. Please contact system administrator."
+        )
+    except json.JSONDecodeError:
+        raise HTTPException(
+            status_code=500, 
+            detail="Invalid activities configuration file. Please contact system administrator."
+        )
+
+# Load activities from JSON file
+activities = load_activities()
+=======
 # In-memory activity database
 activities = {
     "Chess Club": {
@@ -78,11 +102,12 @@ activities = {
     "GitHub Skills": {
         "description": "Learn practical coding and collaboration skills through GitHub. First part of our GitHub Certifications program to help with college applications.",
         "schedule": "Wednesdays, 3:30 PM - 4:30 PM",
+        "description": "Learn practical coding and collaboration skills with GitHub - first part of the GitHub Certifications program",
+        "schedule": "Mondays and Thursdays, 3:30 PM - 5:00 PM",
         "max_participants": 25,
         "participants": []
     }
 }
-
 
 @app.get("/")
 def root():
